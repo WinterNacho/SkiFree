@@ -5,8 +5,12 @@ project(tarea1-SkiFree CXX)
 add_subdirectory("third_party/rusty_audio")
 add_subdirectory("third_party/nothofagus")
 
+#Incluir todos los archivos .cpp recursivamente
+file(GLOB_RECURSE SOURCES "source/*.cpp")
+
 add_executable(SkiFree
     "main.cpp"
+    ${SOURCES}
 )
 
 set_property(TARGET SkiFree PROPERTY CXX_STANDARD 20)
