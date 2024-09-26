@@ -145,11 +145,33 @@ int main()
     Nothofagus::TextureId textureIdPlayer = canvas.addTexture(texturePlayer);
     Nothofagus::BellotaId bellotaIdPlayer = canvas.addBellota({ {{SCREEN_SIZE_X/2, SCREEN_SIZE_X/2}}, textureIdPlayer });
     Nothofagus::Bellota& bellotaPlayer = canvas.bellota(bellotaIdPlayer);
-    Actor player({(float)SCREEN_SIZE_X/2, (float)SCREEN_SIZE_X/2}, {0.0f,0.0f}, {Vector2D(0.0f,0.0f), Vector2D(300.0f,600.0f)}, bellotaPlayer);
+    Actor player({(float)SCREEN_SIZE_X/2, (float)SCREEN_SIZE_X/2}, {0.0f,0.0f}, {Vector2D(16.0f,8.0f), Vector2D(20.0f,8.0f)}, bellotaPlayer);
 
     // Obstacles            
     Nothofagus::TextureId textureIdHydrant = canvas.addTexture(textureHydrant);
     Nothofagus::TextureId textureIdTree = canvas.addTexture(textureTree);
+    
+    std::vector<Actor> obstacles;
+
+    for (int i = 0; i < 20; ++i) { //Hydrant
+        float newPosX = randomPosition();
+        float newPosY = -60.0f * i;
+        Nothofagus::Bellota newBellota{ {{newPosX, newPosY}}, textureIdHydrant};
+        Nothofagus::BellotaId bellotaId = canvas.addBellota(newBellota);
+        Nothofagus::Bellota& bellota = canvas.bellota(bellotaId);
+        Hydrant newHydrant(Vector2D(newPosX, newPosY), bellota);
+        obstacles.push_back(newHydrant);
+    }
+    for (int i = 0; i < 10; ++i) { //Tree
+        float newPosX = randomPosition();
+        float newPosY = -80.0f * i;
+
+        Nothofagus::Bellota newBellota{ {{newPosX, newPosY}}, textureIdTree};
+        Nothofagus::BellotaId bellotaId = canvas.addBellota(newBellota);
+        Nothofagus::Bellota& bellota = canvas.bellota(bellotaId);
+        Tree newTree(Vector2D(newPosX, newPosY), bellota);
+        obstacles.push_back(newTree);
+    }
 
     // Variables controlador
     int direction = 3; // Entre 0 y 6. los extremos son izq y der respectivamente
@@ -159,44 +181,25 @@ int main()
     float tiempoAcumulado = 0.0f;
     float intervaloAccion = 1000.0f;
     std::vector<Vector2D> directions = {{
-        {0.0f, 0.0f}, // direction 0
-        {0.90f, 1.0f}, // direction 1
-        {0.50f, 1.0f}, // direction 2
-        {0.00f, 1.0f}, // direction 3
-        {-0.50f, 1.0f}, // direction 4
-        {-0.90f, 1.0f}, // direction 5
-        {0.00f, 0.0f}, // direction 6
- 
+        {0.0f, 0.f}, // direction 0
+        {0.9f, 1.0f}, // direction 1
+        {0.5f, 1.0f}, // direction 2
+        {0.0f, 1.0f}, // direction 3
+        {-0.5f, 1.0f}, // direction 4
+        {-0.9f, 1.0f}, // direction 5
+        {0.0f, 0.0f}, // direction 6
+        {0.0f, 0.0f}, // direction 6
     }};
 
     float time = 0.0f;
     int dist = 0;
     int speed = 0;
     int syle = 0;
-
-    std::vector<Actor> obstacles;
-
-    for (int i = 0; i < 10; ++i) { //Hydrant
-        float newPosX = randomPosition();
-        float newPosY = -100.0f * i;
-
-        Nothofagus::Bellota newBellota{ {{newPosX, newPosY}}, textureIdHydrant};
-        Nothofagus::BellotaId bellotaId = canvas.addBellota(newBellota);
-        Nothofagus::Bellota& bellota = canvas.bellota(bellotaId);
-        Hydrant newHydrant(Vector2D(newPosX, newPosY), bellota);
-        obstacles.push_back(newHydrant);
-    }
-
-    // for (int i = 0; i < 10; ++i) { //Tree
-    //     float newPosX = randomPosition();
-    //     float newPosY = -100.0f * i;
-
-    //     Nothofagus::Bellota newBellota{ {{newPosX, newPosY}}, textureIdTree};
-    //     Nothofagus::BellotaId bellotaId = canvas.addBellota(newBellota);
-    //     Nothofagus::Bellota& bellota = canvas.bellota(bellotaId);
-    //     obstacles.push_back(&bellota);
-    // }
-
+    float collisionTimer = 0;
+    float inmunityTimer = 0;
+    const float collisionDuration = 2000; 
+    const float inmunityDuration = 2500;   
+    bool inmunity = false;
     auto update = [&](float dt)
         {
             time += dt;
@@ -212,35 +215,43 @@ int main()
             ImGui::Text("Speed: %dm", speed);
             ImGui::Text("Style: %dm", syle);
             ImGui::Text("POS: %dm", direction); // ELIMINAR DESPUES
-            ImGui::Text("COLLISION: %d", collision); // ELIMINAR DESPUES
-            ImGui::Text("pos X: %d", obstacles[0].getPosition().x); // ELIMINAR DESPUES
-            ImGui::Text("pos Y: %d", obstacles[0].getPosition().y); // ELIMINAR DESPUES
+            ImGui::Text("Inmunity: %dm", inmunity); // ELIMINAR DESPUES
             ImGui::End();
 
-
             for (auto& obs : obstacles) {
-                collision = player.collision(obs);
+                if (player.collision(obs) and !inmunity) {
+                    std::cout << "Colision with: " << std::endl;
+                    std::cout << " position-> x: " << obs.getPosition().x <<"y: " << obs.getPosition().y << std::endl;
+                    std::cout << " position-> x: " << obs.getBellota().transform().location().x << "y: " << obs.getBellota().transform().location().y << std::endl;
+                    collision = true;
+                    direction = 7;
+                    collisionTimer = time;
+                    inmunityTimer = time;
+                    inmunity = true;
+                }
                 obs.move(directions[direction].x* dt/10, directions[direction].y* dt/10);
             }
 
-            
-            // if (tiempoAcumulado >= intervaloAccion) {
-            //     if (leftKeyPressed)
-            //         pos = std::max(pos-1, 0);
+            if (collision && (time > collisionTimer + collisionDuration)) {
+                direction = 3; 
+                collision = false;
+                std::cout << "ready" << std::endl;
+            }
 
-            //     if (rightKeyPressed)
-            //         pos = std::min(pos +1, 6);
+            if (inmunity && (time > inmunityTimer + inmunityDuration)) {
+                inmunity = false; 
+                std::cout << "inmunity out" << std::endl;
+            }
+                
 
-            //     tiempoAcumulado -= intervaloAccion;
-            // }
-   
         };
 
     Nothofagus::Controller controller;
     controller.registerAction({Nothofagus::Key::A, Nothofagus::DiscreteTrigger::Press}, [&]()
     {
         //leftKeyPressed = true;
-        direction = std::max(direction-1, 0);
+        if(direction != 7)
+            direction = std::max(direction-1, 0);
     });
     // controller.registerAction({Nothofagus::Key::A, Nothofagus::DiscreteTrigger::Release}, [&]()
     // {
@@ -250,7 +261,8 @@ int main()
     controller.registerAction({Nothofagus::Key::D, Nothofagus::DiscreteTrigger::Press}, [&]()
     {
         //rightKeyPressed = true;
-        direction = std::min(direction +1, 6);
+        if (direction != 7)
+            direction = std::min(direction +1, 6);
     });
     // controller.registerAction({Nothofagus::Key::D, Nothofagus::DiscreteTrigger::Release}, [&]()
     // // {
