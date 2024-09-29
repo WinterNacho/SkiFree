@@ -21,5 +21,14 @@ public:
 
 
 };
+class Ramp : public Actor
+{
+public:
+
+    Ramp(const Vector2D& position, Nothofagus::Bellota& bellota_)
+        : Actor(position, Vector2D(0.0f, 0.0f), BoundingBox(Vector2D(0.0f, 0.0f),Vector2D(35.0f, 20.0f)), bellota_) {}
+
+
+};
 
 #endif // OBSTACLES_H
