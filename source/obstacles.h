@@ -17,7 +17,7 @@ class Tree : public Actor
 public:
 
     Tree(const Vector2D& position, Nothofagus::Bellota& bellota_)
-        : Actor(position, Vector2D(0.0f, 0.0f), BoundingBox(Vector2D(10.0f, 4.0f),Vector2D(18.0f, 14.0f)), bellota_) {}
+        : Actor(position, Vector2D(0.0f, 0.0f), BoundingBox(Vector2D(9.0f, 4.0f),Vector2D(19.0f, 14.0f)), bellota_) {}
 
 
 };

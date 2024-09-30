@@ -47,7 +47,7 @@ void Actor::move(float x_, float y_){
     bellota.transform().location().y += y_;
     position.x += x_;
     position.y += y_;
-    if(bellota.transform().location().y>600){
+    if(bellota.transform().location().y>2000){
         float newX = randomPosition();
         bellota.transform().location().x = newX;
         bellota.transform().location().y = -400;
