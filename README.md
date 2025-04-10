@@ -1,4 +1,4 @@
-# 🎿 Assignment 1 - SkiFree  
+# 🎿 SkiFree  
 **Course:** CC5512 - Game Engine Architecture (Spring 2024)  
 **Language:** C++20 | **Graphics:** Nothofagus | **Audio:** RustyAudio
 
